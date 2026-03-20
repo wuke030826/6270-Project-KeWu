@@ -1,0 +1,168 @@
+---
+title: "VTPEH 6270 - checkpoint4"
+author: "Ke Wu"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 2
+number_sections: true
+---
+
+
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  results = "hide"
+)  
+```
+# Research question
+
+Is physical activity level associated with BMI category among adults in the 2023 NYSDOH BRFSS dataset?
+
+# Data Description
+
+```{r, echo=TRUE, results='hide', message=FALSE, warning=FALSE, fig.show='hide'}
+setwd("/Users/kewu/Desktop/6280")
+
+data_CDC <- read.csv("NYSDOH_BRFSS_SurveyData_2023.csv")
+
+variables <- data.frame(
+  Variable_Name = c("_PAINDX3","_BMI5","AGE","SEXVAR"),
+  Variable_Type = c("Categorical","Continuous","Continuous","Categorical"),
+  R_Class = c(class(data_CDC$`_PAINDX3`),
+              class(data_CDC$`_BMI5`),
+              class(data_CDC$AGE),
+              class(data_CDC$SEXVAR))
+)
+
+variables
+```
+
+# Data Visualization
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+library(ggplot2)
+
+ggplot(data_CDC, aes(x = X_PAINDX3, y = X_BMI5)) +
+  geom_boxplot(fill = "pink") +
+  labs(
+    title = "BMI Distribution by Physical Activity Level",
+    x = "Physical Activity Index",
+    y = "BMI"
+  ) +
+  coord_flip() +
+  theme_minimal()
+```
+
+# Description of Plausible Relationship
+
+Individuals who report higher physical activity levels appear less likely to have higher BMI. This suggests a negative association between physical activity and BMI category, where more active individuals may have healthier weight status.
+
+# Parameters of Interest
+
+```{r, echo=TRUE, results='hide', message=FALSE, warning=FALSE, fig.show='hide'}
+parameters <- data.frame(
+  Parameter = c("Intercept", "Effect size", "Noise"),
+  Symbol = c("a", "b", "$\\epsilon$"),
+  Description = c(
+    "Baseline BMI when physical activity index is 0",
+    "Change in BMI per unit increase in physical activity",
+    "Random variability in BMI not explained by physical activity"
+  )
+)
+
+parameters
+```
+
+# Simulation Basis
+
+```{r, echo=TRUE, results='hide', message=FALSE, warning=FALSE, fig.show='hide'}
+simulate_data <- function(effect_size, noise, sample_size){
+
+  PA <- sample(0:1, sample_size, replace=TRUE)
+
+  BMI <- 30 + effect_size*PA + rnorm(sample_size,0,noise)
+
+  data.frame(PA,BMI)
+
+}
+```
+
+# Simulation Output
+```{r, echo=TRUE, results='hide', message=FALSE, warning=FALSE, fig.show='hide'}
+summary_stats <- function(data){
+
+  aggregate(BMI ~ PA, data, function(x)
+    c(mean=mean(x),
+      q1=quantile(x,0.25),
+      median=median(x),
+      q3=quantile(x,0.75))
+  )
+
+}
+```
+
+
+# Simulation Function
+
+```{r, echo=TRUE, results='hide', message=FALSE, warning=FALSE, fig.show='hide'}
+run_simulation <- function(effect_size,noise,sample_size){
+
+  sim_data <- simulate_data(effect_size,noise,sample_size)
+
+  stats <- summary_stats(sim_data)
+
+  list(data=sim_data,summary=stats)
+
+}
+```
+
+# Simulation Automation
+```{r, echo=TRUE, results='hide', message=FALSE, warning=FALSE, fig.show='hide'}
+effect_sizes <- seq(-5,5,length.out=10)
+sample_sizes <- seq(100,5000,length.out=10)
+noise_levels <- c(1,5,10)
+
+results <- list()
+
+counter <- 1
+
+for(e in effect_sizes){
+  for(n in sample_sizes){
+    for(no in noise_levels){
+
+      results[[counter]] <- run_simulation(e,no,n)
+
+      counter <- counter + 1
+    }
+  }
+}
+```
+
+# Visualization
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+library(ggplot2)
+
+ggplot(data_CDC, aes(x = X_PAINDX3, fill = X_BMI5CAT)) +
+  geom_bar(position = "fill") +
+  labs(
+    title = "BMI Category by Physical Activity Level",
+    x = "Physical Activity Index",
+    y = "Proportion",
+    fill = "BMI Category"
+  ) +
+  coord_flip() +
+  theme_minimal()
+```
+
+# Interpretation
+The simulations demonstrates how effect size, sample size, and noise influence the ability to detect relationships between physical activity and BMI. Larger effect sizes produce clearer differences between activity groups. Larger sample sizes reduce variability in summary statistics, improving statistical power. Higher noise levels obscure relationships, making associations harder to detect even when they exist.
+
+# AI
+
+I use ChatGPT to debugging the plot part and help coding with "Simulation Automation" part.
+

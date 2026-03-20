@@ -1,0 +1,137 @@
+---
+title: "VTPEH 6207 - CheckPoint 2"
+author: "Ke Wu"
+date: "`r Sys.Date()`"
+editor_options:
+  chunk_output_type: console
+output:
+  pdf_document:
+  toc: true
+toc_depth: 1
+number_sections: true
+urlcolor: blue
+---
+*3.1*
+Background
+  Chronic diseases such as obesity, diabetes, and cardiovascular disease act as 
+  major public health concerns in New York State. Behavioral risk factors like 
+  physical inactivity, poor diet, and smoking significantly contribute to these
+  concerns. Analyzing BRFSS data helps explore how health behaviors relate to 
+  chronic disease risk and identify vulnerable populations. The motivation of 
+  this project is driven by a better understanding on behavioral factors to 
+  support more efficient interventions and decisions that improve community 
+  health outcomes.
+  
+Project Question
+  What is the relationship between selected behavioral risk factors and chronic 
+  disease indicators in adults, in New York State based on 2023 BRFSS survey 
+  data?
+  
+Data Overview
+  This dataset comes from the New York State Department of Health (NYSDOH) 
+  Behavioral Risk Factor Surveillance System (BRFSS) 2023 survey. It is a 
+  telephone survey coordinated nationally by the CDC and administered at the 
+  state level. The study population includes non-institutionalized adults aged 
+  18 years and older living in New York State. The data represent self-reported 
+  health behaviors, chronic disease status, and preventive health practices. 
+  The data collection period is 2023.
+#loading data
+```{r, results='hide'}
+
+# Packages
+library("janitor")
+
+# Load file
+data_BRFSS=read.csv("/Users/kewu/Desktop/NYSDOH_BRFSS_SurveyData_2023.csv")
+
+# Preview the data
+head(data_BRFSS)
+names(data_BRFSS)
+str(data_BRFSS)
+summary(data_BRFSS)
+
+```
+
+
+  *3.2.1*
+  
+```{r}
+library(dplyr)
+
+var_table <- data.frame(
+  Variable = names(data_BRFSS),
+  Class = sapply(data_BRFSS, class),
+  Type = sapply(data_BRFSS, function(x){
+    if(is.numeric(x) | is.integer(x)) "Continuous"
+    else if(is.factor(x) | is.character(x)) "Categorical"
+    else "Other"
+  })
+)
+
+# <=10 variable
+vars_keep <- c("SEXVAR", "AGE", "_BMI5", "_SMOKER3", "DIABETE4",
+               "GENHLTH", "EXERANY2", "INCOME3")
+
+var_table_10 <- var_table %>% filter(Variable %in% vars_keep)
+
+knitr::kable(var_table_10,
+             caption = "Table 1. Overview of selected variables from NYSDOH BRFSS 2023.")
+```
+
+
+
+*3.2.2.1(IMONTH)*
+```{r}
+library(ggplot2)
+
+x <- data_BRFSS$IMONTH
+
+#mean and median
+x_mean <- mean(x, na.rm = TRUE)
+x_median <- median(x, na.rm = TRUE)
+#mean/median lines and legend 
+ggplot(data_BRFSS, aes(x = IMONTH)) +
+  geom_histogram(binwidth = 1, boundary = 0.5, color = "black", fill = "blue") +
+  geom_vline(aes(xintercept = x_mean, color = "Mean"), linewidth = 1) +
+  geom_vline(aes(xintercept = x_median, color = "Median"), linetype = "dashed", linewidth = 1) +
+  scale_color_manual(values = c("Mean" = "pink", "Median" = "lightgreen")) +
+  scale_x_continuous(breaks = 1:12) +
+  labs(
+    title = "Histogram of Interview Month (NYSDOH BRFSS 2023)",
+    x = "Interview month",
+    y = "Number of participants",
+    color = "Statistic",
+    caption = "Figure 1. Distribution of interview month in the NYSDOH BRFSS 2023 dataset. Solid red line = mean; dashed blue line = median."
+  ) +
+  theme_minimal()
+```
+
+*3.2.2.2*
+
+```{r}
+library(ggplot2)
+
+data_BRFSS$month <- as.numeric(data_BRFSS$IMONTH)
+data_BRFSS$day <- as.numeric(data_BRFSS$IDAY)
+
+
+ggplot(data_BRFSS, aes(x = month, y = day)) +
+  geom_point(alpha = 0.4, color = "pink") +
+  
+  scale_x_continuous(breaks = 1:12) +
+  scale_y_continuous(breaks = seq(0, 31, 5)) +
+  
+  labs(
+    title = "Scatterplot of Interview Month vs Interview Day (BRFSS 2023)",
+    x = "Interview Month (1 = Jan … 12 = Dec)",
+    y = "Interview Day of Month",
+    caption = "Figure 2. Scatterplot showing distribution of interview timing by month and day in NYSDOH BRFSS 2023 dataset."
+  ) +
+  
+  theme_minimal()
+```
+
+
+
+*4*
+ This document was generated using CHATGTP to debugging the diagram code 

@@ -1,0 +1,134 @@
+---
+title: "VTPEH 6270 - checkpoint3"
+author: "Ke Wu"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+    toc_depth: 1
+    number_sections: true
+editor_options:
+  chunk_output_type: console
+---
+
+
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  results = "hide"
+)  
+```
+# 1 Introduction
+
+This report explores the association between body mass index and diabetes status among adults in New York State using 2023 BRFSS survey data. The purpose is to further explore the dataset, produce clear descriptive tables and visualizations. 
+
+
+# 2 Research Question and Background
+
+## Research question 
+
+**Research question:** *Does diabetes occur more frequently in higher BMI categories (normal weight, overweight, obese) among NYS adults in the 2023 BRFSS?* 
+
+
+## Scientific plausibility and context (≥3 citations)
+The Cell Metabolism perspective (Klein et al., 2022) explains that excess adiposity(amount and distribution of body fat) promotes insulin resistance through chronic inflammation.This specific mechanism directly contribute to type 2 Diabetes. Similarly, Gray et al. (2015) found the association between increasing BMI and higher risk to have diabetes in older adults. Later, the Asia Cohort Consortium study shows progressively higher risk of diabetes through increasing BMI categories in various populations.
+
+
+**Reference:**
+[1]Gray N, Picone G, Sloan F, Yashkin A. Relation between BMI and diabetes mellitus and its complications among US older adults. South Med J. 2015 Jan;108(1):29-36. doi: 10.14423/SMJ.0000000000000214. PMID: 25580754; PMCID: PMC4457375.
+[2]Klein S, Gastaldelli A, Yki-Järvinen H, Scherer PE. Why does obesity cause diabetes? Cell Metab. 2022;34(1):11-20. doi:10.1016/j.cmet.2021.12.012
+[3]Boffetta P, McLerran D, Chen Y, Inoue M, Sinha R, He J, et al. (2011) Body Mass Index and Diabetes in Asia: A Cross-Sectional Pooled Analysis of 900,000 Individuals in the Asia Cohort Consortium. PLoS ONE 6(6): e19930. https://doi.org/10.1371/journal.pone.0019930
+
+
+# 3 Data Preparation
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+library(janitor)
+library(readr)
+library(dplyr)
+library(ggplot2)
+
+NYS <- read_csv("/Users/kewu/Desktop/6280/NYSDOH_BRFSS_SurveyData_2023.csv")
+
+NYS <- clean_names(NYS)
+
+glimpse(NYS)
+
+######
+
+NYS <- NYS %>%
+  select(bmi5cat, diabete4) %>%
+  mutate(
+    bmi_cat = case_when(
+      bmi5cat %in% c("Underweight", "Normal Weight", "Overweight", "Obese") ~ bmi5cat,
+      TRUE ~ NA_character_
+    ),
+    diabetes = case_when(
+      diabete4 == "Yes" ~ "Yes",
+      diabete4 == "No"  ~ "No",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  filter(!is.na(bmi_cat), !is.na(diabetes)) %>%
+  mutate(
+    bmi_cat = factor(bmi_cat,
+                     levels = c("Underweight", "Normal Weight", "Overweight", "Obese")),
+    diabetes = factor(diabetes, levels = c("No", "Yes"))
+  )
+```
+
+
+# 4 Grouped Summary Statistics
+```{r}
+table(NYS$bmi_cat, NYS$diabetes)
+
+prop.table(table(NYS$bmi_cat, NYS$diabetes), margin = 1)
+```
+Participants who are obese showed the highest percentage of diabetes compared to those in the normal weight and overweight. prevalence of diabetes is proportional increase with higher BMI.
+
+
+# 5 Visualization
+
+```{r}
+
+library(scales)
+
+nature_plot <- ggplot(NYS, aes(x = bmi_cat, fill = diabetes)) +
+  geom_bar(position = "fill", color = "black", width = 0.7) +
+  scale_fill_manual(values = c("grey70", "black")) +
+  scale_y_continuous(labels = percent_format(), expand = c(0, 0)) +
+  labs(
+    title = "Figure 1. Proportion of Adults with Diabetes by BMI Category, New York State BRFSS 2023",
+    subtitle = "Higher BMI categories show a greater proportion of people having diabetes.",
+    x = "BMI Category",
+    y = "Proportion of Participants",
+    fill = "Diabetes Status",
+    caption = "Data source: 2023 New York State BRFSS Survey. Proportions calculated within BMI categories."
+  ) +
+  theme_classic(base_size = 12) +
+  theme(
+    legend.position = "top",
+    legend.title = element_text(face = "bold"),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "black"),
+    plot.title = element_text(face = "bold", hjust = 0),
+    plot.caption = element_text(size = 9)
+  )
+
+nature_plot
+
+ggsave("Figure1_BMI_Diabetes_NYS.pdf",
+       plot = nature_plot,
+       width = 6,
+       height = 4,
+       dpi = 300)
+
+```
+
+Figure 1 shows people in obese have the highest percentage of diabetes, compare to those who are overweight etc. While normal weight participants have the lowest prevalence of diabetes. Those support that prevalence of diabetes among NYS adults in the 2023 BRFSS not only correlates with higher BMI, but also positively associates. 
+
