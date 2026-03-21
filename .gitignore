@@ -1,0 +1,10 @@
+# R files
+.Rhistory
+.RData
+.Rproj.user/
+
+# Large raw data
+NYSDOH_BRFSS_SurveyData_2023.csv
+
+# macOS files
+.DS_Store
