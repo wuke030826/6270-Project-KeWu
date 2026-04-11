@@ -1,0 +1,86 @@
+---
+title: "VTPEH 6270 - checkpoint6 Code"
+author: "Ke Wu"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+    toc_depth: 1
+    number_sections: true
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+# Loading Data
+```{r, results='hide'}
+library(dplyr)
+library(ggplot2)
+library(scales)
+library(janitor)
+
+data_BRFSS <- read.csv("/Users/kewu/Desktop/6280/data/NYSDOH_BRFSS_SurveyData_2023.csv")
+```
+
+
+```{r check_raw_categories}
+table(data_BRFSS$X_BMI5CAT, useNA = "ifany")
+table(data_BRFSS$DIABETE4, useNA = "ifany")
+```
+# Cleaning Analysis Data
+```{r}
+analysis_data <- data_BRFSS %>%
+  select(DIABETE4, X_BMI5CAT) %>%
+  filter(X_BMI5CAT %in% c("Underweight", "Normal Weight", "Overweight", "Obese")) %>%
+  filter(DIABETE4 %in% c("Yes", "No"))
+
+analysis_data$X_BMI5CAT <- factor(
+  analysis_data$X_BMI5CAT,
+  levels = c("Underweight", "Normal Weight", "Overweight", "Obese")
+)
+
+analysis_data$DIABETE4 <- factor(
+  analysis_data$DIABETE4,
+  levels = c("No", "Yes")
+)
+
+dim(analysis_data)
+head(analysis_data)
+```
+# Contingency Table
+```{r}
+table_bmi_diabetes <- table(analysis_data$X_BMI5CAT, analysis_data$DIABETE4)
+table_bmi_diabetes
+addmargins(table_bmi_diabetes)
+```
+# Row Proportions
+```{r}
+prop.table(table_bmi_diabetes, margin = 1)
+```
+# Chi-Square Test
+```{r}
+chisq_result <- chisq.test(table_bmi_diabetes)
+chisq_result
+chisq_result$expected
+```
+# Figure 1. Proportion of Adults with Diabetes by BMI Category
+```{r}
+ggplot(analysis_data, aes(x = X_BMI5CAT, fill = DIABETE4)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = percent_format()) +
+  labs(
+    title = "Proportion of Adults with Diabetes by BMI Category",
+    x = "BMI Category",
+    y = "Proportion of Participants",
+    fill = "Diabetes Status",
+    caption = "Data source: NYSDOH BRFSS 2023"
+  ) +
+  theme_minimal()
+```
