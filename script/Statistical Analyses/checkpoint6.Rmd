@@ -1,0 +1,49 @@
+---
+title: "VTPEH 6270 - checkpoint6"
+author: "Ke Wu"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+    toc_depth: 1
+    number_sections: true
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  results = "hide"
+)  
+```
+
+#Introduction
+##Research Question
+Does Diabetes occur more frequently across BMI categories in New York State adults in 2023 BRFSS?
+##Scientific Plausibility and Context.
+The Cell Metabolism perspective (Klein et al., 2022) explains that excess adiposity(amount and distribution of body fat) promotes insulin resistance through chronic inflammation.This specific mechanism directly contribute to type 2 Diabetes. Similarly, Gray et al. (2015) found the association between increasing BMI and higher risk to have diabetes in older adults. Later, the Asia Cohort Consortium study shows progressively higher risk of diabetes through increasing BMI categories in various populations.
+#Reference:
+[1]Gray N, Picone G, Sloan F, Yashkin A. Relation between BMI and diabetes mellitus and its complications among US older adults. South Med J. 2015 Jan;108(1):29-36. doi: 10.14423/SMJ.0000000000000214. PMID: 25580754; PMCID: PMC4457375.
+[2]Klein S, Gastaldelli A, Yki-Järvinen H, Scherer PE. Why does obesity cause diabetes? Cell Metab. 2022;34(1):11-20. doi:10.1016/j.cmet.2021.12.012
+[3]Boffetta P, McLerran D, Chen Y, Inoue M, Sinha R, He J, et al. (2011) Body Mass Index and Diabetes in Asia: A Cross-Sectional Pooled Analysis of 900,000 Individuals in the Asia Cohort Consortium. PLoS ONE 6(6): e19930. https://doi.org/10.1371/journal.pone.0019930
+#Material & Methods
+##Data
+This dataset comes from the New York State Department of Health (NYSDOH) 
+  Behavioral Risk Factor Surveillance System (BRFSS) 2023 survey. It is a 
+  telephone survey coordinated nationally by the CDC and administered at the 
+  state level. The study population includes non-institutionalized adults aged 
+  18 years and older living in New York State. The data represent self-reported 
+  health behaviors, chronic disease status, and preventive health practices. 
+  The data collection period is 2023.
+##Statistical Analyses
+This study will use chi-square test of independence to test whether diabetes status differed across BMI categories, because both BMI category and diabetes status are categorical variables.
+Following steps are what this study will perform:
+1) a cleaned anayltic dataset
+2) a contingency table of BMI category by diabetes status
+3) examined row proportions
+4) checked expected cell counts using the output of chisq.test().
+##Code
